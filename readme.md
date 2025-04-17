@@ -45,4 +45,24 @@ pip install -r requirements.txt
 python3 app.py
 
 //////////////////
+To work with minikube:
 
+set password in hashicorp vault:
+
+vault secrets enable -path=keycloak kv-v2
+
+vault kv put keycloak/client-secrets \
+  client_id="namegiventotheclientinkeycloakconsole" \
+  client_secret="YOUR_CLIENT_SECRET" \
+  auth_uri="http://keycloak-service.default.svc.cluster.local:8080/realms/testlhcrealm/protocol/openid-connect/auth" \
+  token_uri="http://keycloak-service.default.svc.cluster.local:8080/realms/testlhcrealm/protocol/openid-connect/token" \
+  userinfo_uri="http://keycloak-service.default.svc.cluster.local:8080/realms/testlhcrealm/protocol/openid-connect/userinfo" \
+  issuer="http://keycloak-service.default.svc.cluster.local:8080/realms/testlhcrealm" \
+  redirect_uris="http://localhost:5000/callback"
+
+
+vault policy write keycloakapp - <<EOF
+path "keycloak/data/client-secrets" {
+  capabilities = ["read"]
+}
+EOF
