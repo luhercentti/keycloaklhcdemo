@@ -58,7 +58,10 @@ vault kv put keycloak/client-secrets \
   token_uri="http://keycloak-service.default.svc.cluster.local:8080/realms/testlhcrealm/protocol/openid-connect/token" \
   userinfo_uri="http://keycloak-service.default.svc.cluster.local:8080/realms/testlhcrealm/protocol/openid-connect/userinfo" \
   issuer="http://keycloak-service.default.svc.cluster.local:8080/realms/testlhcrealm" \
-  redirect_uris="http://localhost:5000/callback"
+  redirect_uris="http://localhost:5000/callback" \
+  flask_secret_key="aaaaaaaa"
+
+this also contains the flask session encryption key, required for flask session to work securely "flask_secret_key"
 
 
 vault policy write keycloakapp - <<EOF
@@ -66,3 +69,24 @@ path "keycloak/data/client-secrets" {
   capabilities = ["read"]
 }
 EOF
+
+I have a Vault running in docker outside minikube, and for this demo i will install vault inyetor in my minikube
+# Add the HashiCorp Helm repository
+helm repo add hashicorp https://helm.releases.hashicorp.com
+helm repo update
+
+# Install the Vault Agent Injector
+helm install vault hashicorp/vault \
+    --set "injector.enabled=true" \
+    --set "server.enabled=false" \
+    --set "injector.externalVaultAddr=http://host.minikube.internal:8200"
+
+
+docker build -t luhercen/python-keycloak-app:latest .
+
+docker login 
+docker push luhercen/python-keycloak-app:latest 
+verify: https://hub.docker.com/repository/docker/luhercen/python-keycloak-app
+
+
+kubectl apply -f k8s/deployment.yml
