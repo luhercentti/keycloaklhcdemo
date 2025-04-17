@@ -1,4 +1,5 @@
 
+////////
 minikube addons list | grep 'storage-provisioner'
 minikube addons enable storage-provisioner
 
@@ -32,4 +33,16 @@ helm install keycloak bitnami/keycloak \
 
 wait for keycloack to be up, can take some minutes, then load keycloak:
 kubectl port-forward svc/keycloak 8080:80
+
+now create the new client, with the redirect urls data 
+
+//////// For the local docker test just do:
+python -m venv keycloakdemo
+source keycloakdemo/bin/activate
+
+pip install -r requirements.txt
+
+python3 app.py
+
+//////////////////
 

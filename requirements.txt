@@ -1,0 +1,4 @@
+flask==2.3.3
+authlib==1.2.1
+requests==2.31.0
+hvac==1.2.0
