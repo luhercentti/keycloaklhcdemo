@@ -47,6 +47,7 @@ helm install keycloak bitnami/keycloak \
   --set externalDatabase.database=keycloak
 
 wait for keycloack to be up, can take some minutes, then load keycloak:
+
 kubectl port-forward svc/keycloak 8080:80 -n keycloak
 
 now create the new client, with the redirect urls data 
@@ -58,6 +59,22 @@ source keycloakdemo/bin/activate
 pip install -r requirements.txt
 
 python3 app.py
+
+in the file client_secrets.json put your secrets , example of file:
+
+{
+    "web": {
+        "client_id": "namegiventotheclientinkeycloakconsole",
+        "client_secret": "xxxxxxxxx",
+        "auth_uri": "http://localhost:8080/realms/testlhcrealm/protocol/openid-connect/auth",
+        "token_uri": "http://localhost:8080/realms/testlhcrealm/protocol/openid-connect/token",
+        "userinfo_uri": "http://localhost:8080/realms/testlhcrealm/protocol/openid-connect/userinfo",
+        "issuer": "http://localhost:8080/realms/testlhcrealm",
+        "redirect_uris": [
+            "http://localhost:5000/callback"
+        ]
+    }
+}
 
 //////////////////
 To work with minikube:
