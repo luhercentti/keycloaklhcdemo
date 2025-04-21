@@ -1,4 +1,19 @@
 
+docker-compose -f vault-docker-compose.yml up -d
+
+helm install vault hashicorp/vault \
+    --set "injector.enabled=true" \
+    --set "server.enabled=false" \
+    --set "injector.externalVaultAddr=http://host.docker.internal:8200" \
+    --set "injector.hostNetwork=true"
+
+
+vault write auth/kubernetes/config \
+  kubernetes_host="$(kubectl config view --minify -o jsonpath='{.clusters[0].cluster.server}')" \
+  kubernetes_ca_cert=@"minikube-ca.crt" \
+  token_reviewer_jwt="$TOKEN_REVIEW_JWT"
+
+
 ////////
 minikube addons list | grep 'storage-provisioner'
 minikube addons enable storage-provisioner
@@ -32,7 +47,7 @@ helm install keycloak bitnami/keycloak \
   --set externalDatabase.database=keycloak
 
 wait for keycloack to be up, can take some minutes, then load keycloak:
-kubectl port-forward svc/keycloak 8080:80
+kubectl port-forward svc/keycloak 8080:80 -n keycloak
 
 now create the new client, with the redirect urls data 
 
@@ -79,7 +94,8 @@ helm repo update
 helm install vault hashicorp/vault \
     --set "injector.enabled=true" \
     --set "server.enabled=false" \
-    --set "injector.externalVaultAddr=http://host.minikube.internal:8200"
+    --set "injector.externalVaultAddr=http://host.docker.internal:8200"
+    --set "injector.serviceAccount.name=default"
 
 
 docker build -t luhercen/python-keycloak-app:latest .
@@ -90,3 +106,11 @@ verify: https://hub.docker.com/repository/docker/luhercen/python-keycloak-app
 
 
 kubectl apply -f k8s/deployment.yml
+
+
+export VAULT_ADDR=http://0.0.0.0:8200
+
+
+test connectivity from cluster to outside vault server:
+kubectl run -it --rm vault-test --image=curlimages/curl --restart=Never -- \
+  curl -v http://host.minikube.internal:8200/v1/sys/health
